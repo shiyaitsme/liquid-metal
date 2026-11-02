@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050608" />
+    <title>Liquid Metal · 液态金属</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="gl" aria-label="交互式液态金属着色器"></canvas>
+
+    <main class="overlay">
+      <header>
+        <p class="eyebrow">Fragment Shader · WebGL</p>
+        <h1>Liquid Metal</h1>
+        <p class="sub">一块会流动的表面。移动鼠标打光，点击激起涟漪。</p>
+      </header>
+
+      <nav class="materials" aria-label="材质">
+        <button data-material="0" class="active" type="button"><i style="--c:#cfd8e6"></i>水银<kbd>1</kbd></button>
+        <button data-material="1" type="button"><i style="--c:linear-gradient(135deg,#ffd6f0,#c8f0ff,#fff3c4)"></i>珍珠<kbd>2</kbd></button>
+        <button data-material="2" type="button"><i style="--c:#e8b062"></i>黄金<kbd>3</kbd></button>
+        <button data-material="3" type="button"><i style="--c:#1b2233"></i>黑曜石<kbd>4</kbd></button>
+      </nav>
+    </main>
+
+    <div id="fallback" class="fallback" hidden>
+      <p>当前浏览器不支持 WebGL，无法渲染着色器。</p>
+      <p>请换用较新版本的 Chrome、Safari 或 Firefox。</p>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
