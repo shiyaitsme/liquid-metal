@@ -5,8 +5,7 @@ void main() {
 }
 `;
 
-export const MAX_RIPPLES = 8;
-export const MAX_TRAIL = 24;
+export const MAX_RIPPLES = 14;
 
 export const fragmentSource = /* glsl */ `#version 300 es
 precision highp float;
@@ -16,7 +15,6 @@ uniform float uTime;
 uniform vec2  uMouse;
 uniform float uPress;
 uniform vec3  uRipples[${MAX_RIPPLES}];
-uniform vec3  uTrail[${MAX_TRAIL}];
 uniform vec3  uTint;
 uniform vec3  uTint2;
 uniform float uIrid;
@@ -74,18 +72,6 @@ float height(vec2 p) {
       h += 0.075 * env * cos(x * 26.0);
     }
   }
-
-  float wake = 0.0;
-  for (int i = 0; i < ${MAX_TRAIL}; i++) {
-    vec3 r = uTrail[i];
-    float age = uTime - r.z;
-    if (age > 0.0 && age < 1.6) {
-      vec2 d = p - r.xy;
-      float spread = 1.0 + age * 1.2;
-      wake += exp(-dot(d, d) * 14.0 / (spread * spread)) * exp(-age * 2.4);
-    }
-  }
-  h -= 0.045 * min(wake, 1.6);
   return h;
 }
 

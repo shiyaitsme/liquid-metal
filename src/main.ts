@@ -1,4 +1,4 @@
-import { fragmentSource, vertexSource, MAX_RIPPLES, MAX_TRAIL } from "./shader";
+import { fragmentSource, vertexSource, MAX_RIPPLES } from "./shader";
 
 type Material = {
   tint: [number, number, number];
@@ -62,7 +62,6 @@ function start(gl: WebGL2RenderingContext) {
   const uMouse = u("uMouse");
   const uPress = u("uPress");
   const uRipples = u("uRipples[0]");
-  const uTrail = u("uTrail[0]");
   const uTint = u("uTint");
   const uTint2 = u("uTint2");
   const uIrid = u("uIrid");
@@ -72,9 +71,6 @@ function start(gl: WebGL2RenderingContext) {
   const ripples = new Float32Array(MAX_RIPPLES * 3).fill(0);
   for (let i = 0; i < MAX_RIPPLES; i++) ripples[i * 3 + 2] = -100;
   let rippleIndex = 0;
-  const trail = new Float32Array(MAX_TRAIL * 3).fill(0);
-  for (let i = 0; i < MAX_TRAIL; i++) trail[i * 3 + 2] = -100;
-  let trailIndex = 0;
 
   const current: Material = structuredClone(MATERIALS[0]);
   let target = MATERIALS[0];
@@ -111,15 +107,8 @@ function start(gl: WebGL2RenderingContext) {
   const t0 = performance.now();
   const now = () => (performance.now() - t0) / 1000;
 
-  const TRAIL_SPACING = 0.05;
+  const TRAIL_SPACING = 0.17;
   let trailLast: readonly [number, number] | null = null;
-
-  const addTrail = (x: number, y: number, time: number) => {
-    trail[trailIndex * 3] = x;
-    trail[trailIndex * 3 + 1] = y;
-    trail[trailIndex * 3 + 2] = time;
-    trailIndex = (trailIndex + 1) % MAX_TRAIL;
-  };
 
   const stampTrail = (x: number, y: number) => {
     if (!trailLast) {
@@ -130,11 +119,11 @@ function start(gl: WebGL2RenderingContext) {
     const dy = y - trailLast[1];
     const dist = Math.hypot(dx, dy);
     if (dist < TRAIL_SPACING) return;
-    const steps = Math.min(Math.floor(dist / TRAIL_SPACING), MAX_TRAIL);
+    const steps = Math.min(Math.floor(dist / TRAIL_SPACING), MAX_RIPPLES);
     const t = now();
     for (let i = 1; i <= steps; i++) {
       const k = (i * TRAIL_SPACING) / dist;
-      addTrail(trailLast[0] + dx * k, trailLast[1] + dy * k, t);
+      addRipple(trailLast[0] + dx * k, trailLast[1] + dy * k, t);
     }
     const k = (steps * TRAIL_SPACING) / dist;
     trailLast = [trailLast[0] + dx * k, trailLast[1] + dy * k];
@@ -204,7 +193,6 @@ function start(gl: WebGL2RenderingContext) {
     gl.uniform2f(uMouse, mouse.x, mouse.y);
     gl.uniform1f(uPress, mouse.press);
     gl.uniform3fv(uRipples, ripples);
-    gl.uniform3fv(uTrail, trail);
     gl.uniform3fv(uTint, current.tint);
     gl.uniform3fv(uTint2, current.tint2);
     gl.uniform1f(uIrid, current.irid);
