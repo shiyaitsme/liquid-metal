@@ -107,11 +107,36 @@ function start(gl: WebGL2RenderingContext) {
   const t0 = performance.now();
   const now = () => (performance.now() - t0) / 1000;
 
+  const TRAIL_SPACING = 0.08;
+  let trailLast: readonly [number, number] | null = null;
+
+  const stampTrail = (x: number, y: number) => {
+    if (!trailLast) {
+      trailLast = [x, y];
+      return;
+    }
+    const dx = x - trailLast[0];
+    const dy = y - trailLast[1];
+    const dist = Math.hypot(dx, dy);
+    if (dist < TRAIL_SPACING) return;
+    const steps = Math.min(Math.floor(dist / TRAIL_SPACING), MAX_RIPPLES);
+    const t = now();
+    for (let i = 1; i <= steps; i++) {
+      const k = (i * TRAIL_SPACING) / dist;
+      addRipple(trailLast[0] + dx * k, trailLast[1] + dy * k, t);
+    }
+    const k = (steps * TRAIL_SPACING) / dist;
+    trailLast = [trailLast[0] + dx * k, trailLast[1] + dy * k];
+  };
+
   canvas.addEventListener("pointermove", (e) => {
-    const [x, y] = toScene(e.clientX, e.clientY);
-    mouse.tx = x;
-    mouse.ty = y;
-    if (mouse.down && Math.random() < 0.08) addRipple(x, y, now());
+    const events = e.getCoalescedEvents?.() ?? [];
+    for (const ev of events.length ? events : [e]) {
+      const [x, y] = toScene(ev.clientX, ev.clientY);
+      mouse.tx = x;
+      mouse.ty = y;
+      if (mouse.down) stampTrail(x, y);
+    }
   });
   canvas.addEventListener("pointerdown", (e) => {
     canvas.setPointerCapture(e.pointerId);
@@ -119,6 +144,7 @@ function start(gl: WebGL2RenderingContext) {
     mouse.tx = x;
     mouse.ty = y;
     mouse.down = true;
+    trailLast = [x, y];
     addRipple(x, y, now());
   });
   const release = () => (mouse.down = false);
