@@ -14,7 +14,7 @@ uniform vec2  uRes;
 uniform float uTime;
 uniform vec2  uMouse;
 uniform float uPress;
-uniform vec3  uRipples[${MAX_RIPPLES}];
+uniform vec4  uRipples[${MAX_RIPPLES}];
 uniform vec3  uTint;
 uniform vec3  uTint2;
 uniform float uIrid;
@@ -62,14 +62,14 @@ float height(vec2 p) {
   h -= (0.10 + 0.10 * uPress) * exp(-dot(dm, dm) * 3.2);
 
   for (int i = 0; i < ${MAX_RIPPLES}; i++) {
-    vec3 r = uRipples[i];
+    vec4 r = uRipples[i];
     float age = uTime - r.z;
     if (age > 0.0 && age < 5.0) {
       float d = length(p - r.xy);
       float front = age * 0.55;
       float x = d - front;
       float env = exp(-x * x * 18.0) * exp(-age * 0.9);
-      h += 0.075 * env * cos(x * 26.0);
+      h += 0.075 * r.w * env * cos(x * 26.0);
     }
   }
   return h;

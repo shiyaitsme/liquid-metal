@@ -68,8 +68,8 @@ function start(gl: WebGL2RenderingContext) {
   const uDark = u("uDark");
   const uGloss = u("uGloss");
 
-  const ripples = new Float32Array(MAX_RIPPLES * 3).fill(0);
-  for (let i = 0; i < MAX_RIPPLES; i++) ripples[i * 3 + 2] = -100;
+  const ripples = new Float32Array(MAX_RIPPLES * 4).fill(0);
+  for (let i = 0; i < MAX_RIPPLES; i++) ripples[i * 4 + 2] = -100;
   let rippleIndex = 0;
 
   const current: Material = structuredClone(MATERIALS[0]);
@@ -86,10 +86,11 @@ function start(gl: WebGL2RenderingContext) {
     return [(px * 2 - rect.width) / rect.height, (py * 2 - rect.height) / rect.height] as const;
   };
 
-  const addRipple = (x: number, y: number, time: number) => {
-    ripples[rippleIndex * 3] = x;
-    ripples[rippleIndex * 3 + 1] = y;
-    ripples[rippleIndex * 3 + 2] = time;
+  const addRipple = (x: number, y: number, time: number, strength = 1) => {
+    ripples[rippleIndex * 4] = x;
+    ripples[rippleIndex * 4 + 1] = y;
+    ripples[rippleIndex * 4 + 2] = time;
+    ripples[rippleIndex * 4 + 3] = strength;
     rippleIndex = (rippleIndex + 1) % MAX_RIPPLES;
   };
 
@@ -108,6 +109,7 @@ function start(gl: WebGL2RenderingContext) {
   const now = () => (performance.now() - t0) / 1000;
 
   const TRAIL_SPACING = 0.17;
+  const DRAG_STRENGTH = 0.4;
   let trailLast: readonly [number, number] | null = null;
 
   const stampTrail = (x: number, y: number) => {
@@ -123,7 +125,7 @@ function start(gl: WebGL2RenderingContext) {
     const t = now();
     for (let i = 1; i <= steps; i++) {
       const k = (i * TRAIL_SPACING) / dist;
-      addRipple(trailLast[0] + dx * k, trailLast[1] + dy * k, t);
+      addRipple(trailLast[0] + dx * k, trailLast[1] + dy * k, t, DRAG_STRENGTH);
     }
     const k = (steps * TRAIL_SPACING) / dist;
     trailLast = [trailLast[0] + dx * k, trailLast[1] + dy * k];
@@ -135,7 +137,6 @@ function start(gl: WebGL2RenderingContext) {
       const [x, y] = toScene(ev.clientX, ev.clientY);
       mouse.tx = x;
       mouse.ty = y;
-      if (mouse.down) stampTrail(x, y);
     }
   });
   canvas.addEventListener("pointerdown", (e) => {
@@ -144,7 +145,7 @@ function start(gl: WebGL2RenderingContext) {
     mouse.tx = x;
     mouse.ty = y;
     mouse.down = true;
-    trailLast = [x, y];
+    trailLast = [mouse.x, mouse.y];
     addRipple(x, y, now());
   });
   const release = () => (mouse.down = false);
@@ -179,6 +180,7 @@ function start(gl: WebGL2RenderingContext) {
     const follow = 1 - Math.exp(-dt * 9);
     mouse.x = lerp(mouse.x, mouse.tx, follow);
     mouse.y = lerp(mouse.y, mouse.ty, follow);
+    if (mouse.down) stampTrail(mouse.x, mouse.y);
     mouse.press = lerp(mouse.press, mouse.down ? 1 : 0, 1 - Math.exp(-dt * 8));
 
     const k = 1 - Math.exp(-dt * 5);
@@ -192,7 +194,7 @@ function start(gl: WebGL2RenderingContext) {
     gl.uniform1f(uTime, reduceMotion ? t * 0.25 : t);
     gl.uniform2f(uMouse, mouse.x, mouse.y);
     gl.uniform1f(uPress, mouse.press);
-    gl.uniform3fv(uRipples, ripples);
+    gl.uniform4fv(uRipples, ripples);
     gl.uniform3fv(uTint, current.tint);
     gl.uniform3fv(uTint2, current.tint2);
     gl.uniform1f(uIrid, current.irid);
