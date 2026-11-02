@@ -5,7 +5,7 @@ void main() {
 }
 `;
 
-export const MAX_RIPPLES = 24;
+export const MAX_RIPPLES = 14;
 
 export const fragmentSource = /* glsl */ `#version 300 es
 precision highp float;

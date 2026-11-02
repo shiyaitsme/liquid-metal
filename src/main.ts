@@ -107,7 +107,7 @@ function start(gl: WebGL2RenderingContext) {
   const t0 = performance.now();
   const now = () => (performance.now() - t0) / 1000;
 
-  const TRAIL_SPACING = 0.08;
+  const TRAIL_SPACING = 0.17;
   let trailLast: readonly [number, number] | null = null;
 
   const stampTrail = (x: number, y: number) => {
